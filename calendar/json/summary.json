@@ -1,0 +1,27 @@
+{
+    "code": 1,
+    "message": "",
+    "data": {
+        "maxDate": "2016-10-20",
+        "minDate": "2016-07-17",
+        "salary_rate": "0.1%",
+        "items": [
+            {
+                "date": "2016-10-14",
+                "repay_amount": 1600
+            },
+            {
+                "date": "2016-10-17",
+                "repay_amount": 100052
+            },
+            {
+                "date": "2016-10-19",
+                "repay_amount": "120108"
+            }
+        ],
+        "month_invest_amount": 0,
+        "month_unrepay_amount": 0,
+        "month_repay_amount": 221760,
+        "has_set_salary": 0
+    }
+}

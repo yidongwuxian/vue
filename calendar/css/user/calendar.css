@@ -1,0 +1,590 @@
+body {
+	background: #f6f7f9;
+}
+.calendar {
+	-webkit-tap-highlight-color: rgba(0,0,0,0);
+}
+.fade-enter-active,
+.fade-leave-active {
+	transition: opacity .5s
+}
+.fade-enter,
+.fade-leave-active {
+	opacity: 0
+}
+
+/*日期组件*/
+.date-table {
+	width: 100%;
+	text-align: center;
+	color: #7884A0;
+	-webkit-tap-highlight-color: rgba(0,0,0,0);
+}
+.date-table th {
+	font-weight: normal;
+	color: rgba(120,131,160,0.50);
+}
+.date-table tr {
+	line-height: 260%;
+	vertical-align: middle;
+}
+.date-table td {
+	font-size: 0.85rem;
+}
+.date-table tr div {
+	width: 35px;
+	height: 35px;
+	line-height: 35px;
+	border-radius: 50%;
+	margin: 5px auto;
+	position: relative;
+	transition: background 0.3s, color 0.3s;
+}
+.date-table .today div {
+	background: #EDEDED;
+}
+.date-table .salary div {
+	background: #FFFFFF;
+	color: #428CDE;
+}
+.date-table .selected div {
+	transition: all 0.3s;
+	background: #FF6644;
+	color: #fff;
+	box-shadow: 0px 0px 11px 0px rgba(255,102,67,0.33);
+}
+.date-table .selected-salary div {
+	transition: all 0.3s;
+	background: #438CDE;
+	color: #fff;
+}
+.date-table .repay div:before {
+	content: '';
+	position: absolute;
+	width: 7px;
+	height: 7px;
+	background: red;
+	border: 1px solid #FFFFFF;
+	border-radius: 50%;
+	bottom: -2px;
+	left: 38%;
+}
+.date-table .invest div:after {
+	content: '';
+	position: absolute;
+	width: 7px;
+	height: 7px;
+	background: #75C71A;
+	border: 1px solid #FFFFFF;
+	border-radius: 50%;
+	bottom: -2px;
+	left: 38%;
+}
+.date-table .repay.invest div:before {
+	left: 30%;
+}
+.date-table .repay.invest div:after {
+	left: 45%;
+}
+
+
+/*日历头部*/
+.cal-header {
+	padding: 10px 0;
+	color: #7884a0;
+}
+.cal-header .change {
+	display: inline-block;
+	width: 180%;
+}
+.cal-header .change .cur {
+	margin: 0 16%;
+}
+@media screen and (min-width: 375px) {
+	.cal-header .change .cur {
+		margin: 0 19%;
+	}
+}
+@media screen and (min-width: 414px) {
+	.cal-header .change .cur {
+		margin: 0 20%;
+	}
+}
+.cal-header .change .action {
+	color: #7884a0;
+}
+.cal-header .salary {
+	display: inline-block;
+	width: 15%;
+	text-align: right;
+}
+.cal-header .salary a {
+	color: #428CDE;
+	position: relative;
+}
+.cal-header .salary .red {
+	position: absolute;
+	display: block;
+	width: 4px;
+	height: 4px;
+	border-radius: 50%;
+	background: #F8595A;
+	right: -5px;
+	top: -0px;
+}
+.cal-header .arrow {
+	position: relative;
+	margin-left: 5px;
+	background: #7884a0;
+}
+.cal-header .arrow:after {
+	top: 40%;
+	left: 0;
+	border: solid transparent;
+	content: '';
+	height: 0;
+	width: 0;
+	position: absolute;
+	pointer-events: none;
+	border-color: rgba(136, 183, 213, 0);
+	border-top-color: #7884a0;
+	border-width: 4px;
+	margin-left: -4px;
+	transition: all 0.3s;
+}
+.cal-header .arrow.open:after {
+	transform: rotate(180deg);
+	top: 20%;
+}
+
+
+/*月账单*/
+.calendar .month-bill {
+	background: #fff;
+	border-radius: 5px;
+	color: #7884A0;
+	margin-bottom: 10px;
+	box-shadow: 0px 5px 15px 0px rgba(0,0,0,0.09);
+}
+.calendar .month-bill > header {
+	padding: 8px 0;
+	border-bottom: 1px solid #EBEBEB;
+}
+.calendar .month-bill h2 {
+	font-size: 0.9rem;
+	position: relative;
+	color: #5D646E;
+	font-weight: normal;
+	border-left: 3px solid #F25B4E;
+}
+.calendar .month-bill h2 a {
+	display: block;
+	position: absolute;
+	right: 0;
+	top: 0;
+	font-size: 0.8rem;
+	color: #7884A0;
+}
+.calendar .month-bill h2 a .iconfont {
+	font-size: 0.6rem;
+}
+.calendar .month-bill li {
+	padding: 5px 0;
+	font-size: 0.8rem;
+}
+.calendar .month-bill li .key {
+	display: inline-block;
+	width: 40%;
+}
+.calendar .month-bill li .value {
+	display: inline-block;
+	width: 58%;
+	text-align: right;
+}
+.calendar .month-bill li .value.s {
+	color: #F25B4E;
+}
+.calendar .month-bill li.f {
+	color: #b3b1b1;
+}
+.calendar .month-bill .no li {
+	opacity: 0;
+}
+.calendar .month-bill .no-result {
+	text-align: center;
+	top: 30%;
+}
+
+
+/*图示*/
+.calendar .legend {
+	text-align: center;
+	background: #F6F7F9;
+	border: 1px solid #DDDDDD;
+	color: #7884A0;
+	line-height: 280%;
+	font-size: 0.8rem;
+}
+.calendar .legend li {
+	display: inline-block;
+	width: 32%;
+}
+.calendar .legend li .icon {
+	display: inline-block;
+	margin-right: 10px;
+	width: 7px;
+	height: 7px;
+	border: 1px solid #FFFFFF;
+	border-radius: 50%;
+}
+.calendar .legend .repay .icon {
+	background: #FFC131;
+}
+.calendar .legend .invest .icon {
+	background: #75C71A;
+}
+.calendar .legend .salary .icon {
+	background: #FFFFFF;
+	position: relative;
+}
+.calendar .legend .salary .icon:after {
+	content: '';
+	position: absolute;
+	width: 3px;
+	height: 3px;
+	border-radius: 50%;
+	background: #4890DF;
+	top: 30%;
+	left: 0;
+	right: 0;
+	margin: 0 auto;
+}
+
+
+/*日总结*/
+.calendar .day-sum {
+	padding-bottom: 20px;
+}
+.calendar .day-sum-card {
+	background: #fff;
+	color: #7884A0;
+	font-weight: 0.85rem;
+	border-bottom: 1px solid #EBEBEB;
+}
+.calendar .day-sum-card .main {
+	width: 95%;
+}
+.calendar .day-sum-card .icon {
+	width: 5%;
+	text-align: center;
+}
+.calendar .day-sum-card .title {
+	padding: 8px 0;
+	font-size: 0.95rem;
+	font-weight: normal;
+	color: #5D646E;
+}
+.calendar .day-sum-card .line {
+	margin: 8px 0;
+}
+.calendar .day-sum-card .line .value.s {
+	color: #F25B4E;
+}
+
+
+/*日期选择*/
+.picker {
+	-webkit-tap-highlight-color: rgba(0,0,0,0);
+}
+.picker-items .picker-slot:nth-child(3) {
+	display: none;
+}
+
+
+/*工资日*/
+.set-salary-day {
+	padding: 8px 0;
+	font-size: 0.8rem;
+	background: #fff;
+	color: #5D646E;
+}
+.salary-day-btn {
+	display: block;
+	width: 50%;
+	margin: 5% auto;
+	background: #F25B4E;
+	border-radius: 100px;
+	color: #fff;
+	height: 35px;
+	line-height: 35px;
+	text-align: center;
+}
+.salary-day-btn.disabled {
+	background: #C1C1C1;
+}
+.salary-day-tips {
+	margin-top: 30px;
+	color: #999999;
+	font-size: 0.8rem;
+}
+.salary-day-tips li {
+	list-style-type: disc;
+	width: 90%;
+	margin: 5px auto;
+}
+.set-salary-day-tips {
+	color: #438CDE;
+	height: 30px;
+	line-height: 35px;
+	text-align: center;
+	font-size: 0.75rem;
+}
+
+
+/*新功能展现*/
+.new-feature {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	background: #fff;
+	overflow: scroll;
+	-webkit-overflow-scrolling: touch;
+}
+.new-feature h2 {
+	margin-top: 30%;
+	text-align: center;
+	font-weight: normal;
+	color: #5D646E;
+	margin-bottom: 15%;
+}
+.new-feature .feature {
+	text-align: center;
+	margin: 25px auto;
+}
+.new-feature .feature .img {
+	width: 30%;
+	height: 30%;
+}
+.new-feature .feature .card {
+	width: 70%;
+	text-align: left;
+	color: #7884A0;
+	font-size: 0.8rem;
+}
+.new-feature .feature h3 {
+	font-weight: normal;
+	margin: 10px 0;
+}
+.new-feature .salary-day-btn {
+	margin: 25% auto;
+}
+
+/*日账单*/
+.daily .tab-flexible {
+	box-shadow: 0 -2px 0 #fff inset;
+}
+.daily .tab-flexible .cur {
+	box-shadow: 0 -2px 0 #f63 inset;
+}
+.daily-bill-sum {
+	border-radius: 5px;
+	padding: 10px 0;
+	width: 95%;
+	margin: 10px auto;
+	background: #FFFFFF;
+	box-shadow: 0px 5px 12px 0px rgba(0,0,0,0.09);
+	color: #5D646E;
+	font-size: 0.9rem;
+	line-height: 130%;
+}
+.daily-bill-sum .key {
+	border-left: 3px solid #939DB3;
+	padding-left: 3%;
+	width: 55%;
+}
+.daily-bill-sum .value {
+	width: 42%;
+	padding-right: 3%;
+	text-align: right;
+}
+.daily-bill-sum .s .key {
+	border-left: 3px solid #F25B4E;
+}
+.daily-bill-sum .s .value {
+	color: #F25B4E;
+}
+.daily-bill-card-container {
+	width: 94%;
+	margin-left: 5%;
+	border-left: 1px solid #E7E9EF;
+}
+.daily-bill-card-no-data {
+	padding: 50% 0;
+	text-align: center;
+	color: #C0C7CA;
+}
+.daily-bill-card {
+	width: 95%;
+	margin: 20px auto;
+	background: #fff;
+	border-radius: 5px;
+	font-size: 0.85rem;
+	color: #7884A0;
+}
+.daily-bill-card .title-container {
+	padding: 10px 0;
+}
+.daily-bill-card .title {
+	font-size: 0.9rem;
+	color: #5D646E;
+	padding-left: 10px;
+	border-left: 3px solid #939DB3;
+	line-height: 120%;
+	font-weight: normal;
+	position: relative;
+}
+.daily-bill-card .sub-title {
+	font-weight: normal;
+	font-size: 0.85rem;
+	padding-left: 13px;
+	margin-top: 3px;
+}
+.daily-bill-card .sub-title .left {
+	width: 75%;
+}
+.daily-bill-card .sub-title .right {
+	width: 21%;
+	text-align: right;
+	padding-right: 4%;
+}
+.daily-bill-card.s .title {
+	border-left: 3px solid #F25B4E;
+}
+.daily-bill-card .title:before {
+	position: absolute;
+	content: '';
+	display: block;
+	width: 4px;
+	height: 4px;
+	border-radius: 50%;
+	background: #939DB3;
+	left: -14px;
+	top: 0.4rem;
+}
+.daily-bill-card.s .title:before {
+	background: #F25B4E;
+}
+.daily-bill-card .main {
+	padding-bottom: 5px;
+}
+.daily-bill-card .main li {
+	padding: 10px 0;
+	border-bottom: 1px solid #EBEBEB;
+}
+.daily-bill-card .main li:last-child {
+	border-bottom: 0;
+}
+.daily-bill-card .main li div {
+	width: 91%;
+	margin: 0 auto;
+}
+.daily-bill-card .main .key {
+	width: 50%;
+}
+.daily-bill-card .main .value {
+	width: 50%;
+	text-align: right;
+}
+
+
+/*月账单*/
+.month-bill-card-container {
+	width: 94%;
+	margin-left: 5%;
+	border-left: 1px solid #E7E9EF;
+}
+.month-bill-card-no-data {
+	padding: 50% 0;
+	text-align: center;
+	color: #999;
+}
+.month-bill-card {
+	width: 95%;
+	margin: 30px auto;
+	background: #fff;
+	border-radius: 5px;
+	font-size: 0.85rem;
+	color: #7884A0;
+	position: relative;
+}
+.month-bill-card .title-container {
+	padding: 10px 0;
+	border-bottom: 1px solid #EBEBEB;
+}
+.month-bill-card .title {
+	font-size: 0.95rem;
+	color: #5D646E;
+	padding-left: 10px;
+	border-left: 3px solid #939DB3;
+	line-height: 120%;
+	font-weight: normal;
+	position: relative;
+}
+.month-bill-card.s .title {
+	color: #F25B4E;
+	border-left: 3px solid #F25B4E;
+}
+.month-bill-card .title:before {
+	position: absolute;
+	content: '';
+	display: block;
+	width: 4px;
+	height: 4px;
+	border-radius: 50%;
+	background: #939DB3;
+	left: -14px;
+	top: 0.4rem;
+}
+.month-bill-card.s .title:before {
+	background: #F25B4E;
+}
+.month-bill-card .year-tips {
+	position: absolute;
+	left: 0;
+	top: -26px;
+	font-size: 1rem;
+}
+.month-bill-card .main {
+	padding: 5px 0;
+}
+.month-bill-card .main li {
+	padding: 5px 0;
+}
+.month-bill-card .main li div {
+	width: 91%;
+	margin: 0 auto;
+}
+.month-bill-card .main .key {
+	width: 50%;
+}
+.month-bill-card .main .value {
+	width: 50%;
+	text-align: right;
+}
+.month-bill-card .main .value.s {
+	color: #F25B4E;
+}
+.bill-btn {
+	display: block;
+	width: 90%;
+	margin: 0 auto;
+	font-size: 0.85rem;
+	padding: 5px 0;
+	border-radius: 5px;
+	border: 1px solid #7884A0;
+	text-align: center;
+	margin: 20px auto;
+	color: #7884A0;
+}

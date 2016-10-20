@@ -1,0 +1,380 @@
+
+<!doctype html>
+<html lang="zh-CN">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+	<meta content="yes" name="apple-mobile-web-app-capable">
+	<meta content="yes" name="apple-touch-fullscreen">
+	<meta content="black" name="apple-mobile-web-app-status-bar-style">
+	<meta content="telephone=no" name="format-detection">
+	<title>日历	</title>
+	<script>
+		(function(){
+			window.CONFIG.BASE_URI = 'https://lantouzi.com';
+			window.CONFIG.ISWX = /micromessenger/i.test(window.navigator.userAgent);
+		})();
+		var _hmt = _hmt || [];
+	</script>
+			<link rel="stylesheet" type="text/css" href="css/common/base.css">
+			<link rel="stylesheet" type="text/css" href="css/common/mint.ui-2.css">
+		  <link rel="stylesheet" type="text/css" href="css/user/calendar.css">
+			<script src="js/lib/vue-2.0.3.js"></script>
+			<script src="js/module/vue.util2.js"></script>
+			<script src="js/module/util.js"></script>
+	</head>
+<body>
+<div class="l-container calendar g-show-container" :class="{'g-show': loaded}" id="calendar">
+	<div class="cal-header l-m-container">
+		<div class="change">
+			<a class="action left" @click="changeToPrevMonth"><i class="iconfont">&#xe663;</i></a>
+			<span class="cur" @click="handleSelectMonth">
+				<span v-text="year"></span>年<span v-text="month+1"></span>月<span :class="['arrow', {open: showDateTimePicker}]"></span>
+			</span>
+			<a class="action right" @click="changeToNextMonth"><i class="iconfont">&#xe664;</i></a>
+	</div>
+	</div>
+<cal-month-bill :month="month"
+									:year="year"
+									:fetching="isFetching"
+									:month_repay_amount="month_repay_amount"
+									:month_unrepay_amount="month_unrepay_amount"
+									:month_invest_amount="month_invest_amount">
+	</cal-month-bill>
+	<date-table :year="year"
+							:month="month"
+							ref="table"
+							:show-other-month-day="false"
+							@user-click-date="handleUserClickDate">
+	</date-table>
+	<transition name="fade">
+		<div class="day-sum" v-if="showDaySum">
+			<template v-for="sum in daySumData">
+				<cal-day-sum :value="sum"
+										 :year="year"
+										 :month="month">
+				</cal-day-sum>
+			</template>
+		</div>
+	</transition>
+	<template v-if="loadPicker">
+		<mt-datetime-picker type="date"
+											ref="picker"
+											:start-date="min"
+											:end-date="max"
+											year-format="{value} 年"
+											month-format="{value} 月"
+											date-format="{value} 日"
+											v-model="showDate"
+											@confirm="handleConfirm">
+		</mt-datetime-picker>
+	</template>
+</div>
+<script src="js/module/vue.date-table.js"></script>
+<script src="js/module/vue.lrcal.js"></script>
+<script src="js/module/mint.ui-2.min.js"></script>
+<script>
+	document.addEventListener('DOMContentLoaded', function () {
+		var vm = new Vue({
+			name: 'RepayCalendar',
+			el: '#calendar',
+			data: {
+				year: new Date().getFullYear(),
+				month: new Date().getMonth(),
+				min: new Date(),
+				max: new Date(),
+				minReal: new Date(),
+				maxReal: new Date(),
+				today: new Date(),
+				loadPicker: false, // 目前版本的mint有bug，动态改props有点问题
+				monthsData: {},
+				dayTempData: {},
+				daySumData: {},
+				isFetching: false,
+				loaded: false,
+				goUp: false
+			},
+			watch: {
+				year: function (data) {
+					this.autoFetch();
+				},
+				month: function (data) {
+					this.autoFetch();
+				}
+			},
+			computed: {
+				isCurYearAndMonth: function () { // 是否是当前年月
+					if (this.$data.year === this.today.getFullYear() && this.$data.month === this.$data.today.getMonth()) {
+						return true;
+					} else {
+						return false;
+					}
+				},
+				month_repay_amount: function () { // 已收本息（元）
+					if (this.$data.monthsData[this.cacheDataKey]) {
+						return this.$data.monthsData[this.cacheDataKey].month_repay_amount;
+					} else {
+						return 0;
+					}
+				},
+				month_unrepay_amount: function () { // 待收本息（元）
+					if (this.$data.monthsData[this.cacheDataKey]) {
+						return this.$data.monthsData[this.cacheDataKey].month_unrepay_amount;
+					} else {
+						return 0;
+					}
+				},
+				month_invest_amount: function () { // 新增投资（元）
+					if (this.$data.monthsData[this.cacheDataKey]) {
+						return this.$data.monthsData[this.cacheDataKey].month_invest_amount;
+					} else {
+						return 0;
+					}
+				},
+				cacheDataKey: function () { // 缓存数据的Key
+					return this.$data.year + '-' + this.$data.month;
+				},
+				showDaySum: function () { // 是否显示当日总结
+					return !Util.isEmptyObject(this.$data.daySumData);
+				},
+				showSalaryDayTips: function () { // 是否显示工资日的小红点
+					var data = this.$data.monthsData[this.cacheDataKey];
+					if (this.$data.isFetching || data && +data.has_set_salary === 1 ) {
+						return false; // 已经设置过则不显示
+					} else {
+						return true; // 没有设置过则不显示
+					}
+				},
+				showDate: function () { // Picker 要显示的默认日期
+					return new Date(this.$data.year + '/' + (this.$data.month+1) + '/01 12:0:0');
+				},
+				showDateTimePicker: function () { // Picker是否是显示的,目前这个变量不好使（Picker目前版本没有事件）
+					if (this.$data.loadPicker && this.$refs.picker) { 
+						return vm.$refs.picker.visible;
+					} else {
+						return false;
+					}
+				}
+			},
+			methods: {
+				goUpALittle: function () {
+					var x = 10;
+					var id = setInterval(function () {
+						if (x <= 500) {
+							window.scrollTo(0, x);
+							x += 10;
+						} else {
+							clearInterval(id);
+						}
+					}, 10);
+				},
+				formatMonthAndDate: function (number) { // 月份/日期位数统一
+					number = number.toString();
+					if (number.length === 2) {
+						return number;
+					} else {
+						return '0' + number;
+					}
+				},
+				getDayCountOfMonth: function (year, month) { // 获取某个月的天数
+					var lastDay=[31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+					if((month === 1) && (year % 4 === 0) && ((year % 100 !== 0) || (year % 400 === 0))){
+						return 29;
+					} else {
+						return lastDay[month];
+					}
+				},
+				autoFetch: function () { // 月份切换自动获取数据
+					this.$data.dayTempData = {};
+					this.$data.daySumData = {};
+					this.$data.goUp = false;
+					this.getMonthData();
+				},
+				pushCurMonthEventsToCal: function () { // 将当前月所有事件附加到日历组件上
+					var data = this.$data.monthsData[this.cacheDataKey];
+					if (data) {
+						this.setMaxAndMin(data.maxDate, data.minDate);
+						this.eventDataParse(data.items);
+						this.pushSalaryDayToCal(data.salary_days);
+					}
+					if (this.isCurYearAndMonth) { // 选中『今天』
+						var dom = document.querySelector('.today');
+						if (dom) {
+							document.querySelector('.today').click();
+						}
+					}
+				},
+				setMaxAndMin: function (max, min) { // 设置日历的两个极限值
+					// 目前这个版本的mint组件有Bug
+					// start-date 和 end-data 日期不是完整年切换年会导致月无法更新
+					max = new Date(max.replace(/\-/g, '/'));
+					min = new Date(min.replace(/\-/g, '/'));
+					this.$data.maxReal = max;
+					this.$data.minReal = min;
+					this.$data.max = new Date(max.getFullYear() + '/12/30');
+					this.$data.min = new Date(min.getFullYear() + '/01/01');
+				},
+				eventDataParse: function (data) { // 解析当前月份日期的事件
+					if (!data) {
+						return false;
+					}
+					data.forEach(function(item, index) {
+						var key = new Date(item.date.replace(/\-/g, '/'));
+						var styles = '';
+						if (item.invest_amount && item.invest_amount > 0 && !item.unrepay_amount && !item.repay_amount ) { // 只有投资
+							styles = 'invest';
+							Vue.set(vm.$data.dayTempData, item.date, [{
+								type: 'invest',
+								day: key.getDate(),
+								invest_amount: +item.invest_amount
+							}]);
+						} else if (!item.invest_amount && (item.unrepay_amount && item.unrepay_amount > 0 || item.repay_amount && item.repay_amount > 0) ) { // 只有回款
+							styles = 'repay';
+							Vue.set(vm.$data.dayTempData, item.date, [{
+								type: 'repay',
+								day: key.getDate(),
+								unrepay_amount: item.unrepay_amount ? +item.unrepay_amount : 0,
+								repay_amount: item.repay_amount ? +item.repay_amount : 0
+							}]);
+						} else { // 既有回款，也有投资
+							styles = 'invest repay';
+							Vue.set(vm.$data.dayTempData, item.date, [{
+								type: 'repay',
+								day: key.getDate(),
+								unrepay_amount: +item.unrepay_amount,
+								repay_amount: +item.repay_amount
+							}, {
+								type: 'invest',
+								day: key.getDate(),
+								invest_amount: +item.invest_amount
+							}]);
+						}
+						vm.$refs.table.$emit('set-date-style', {
+							day: key.getDate(),
+							style: styles
+						});
+					});
+				},
+				pushSalaryDayToCal: function (data) { // 标记工资日
+					if (!data) {
+						return false;
+					}
+					data.forEach(function(ele, index) {
+						vm.$refs.table.$emit('add-date-style', {
+							day: ele,
+							style: 'salary'
+						});
+					});
+				},
+				checkDateSum: function (day) { // 查看某一天的总结
+					var checkKey = this.$data.year + '-' + this.formatMonthAndDate((this.$data.month+1))+ '-' + this.formatMonthAndDate(day);
+					var checkValue = vm.$data.dayTempData[checkKey];
+					if (checkValue) {
+						this.$data.daySumData = checkValue;
+						if (!this.$data.goUp) {
+							this.goUpALittle();
+							this.$data.goUp = true;
+						}
+					} else {
+						this.$data.goUp = false;
+						this.$data.daySumData = {};
+					}
+				},
+				handleConfirm: function (v) { // 在Picker中选择日期 
+					this.$data.month = v.getMonth();
+					this.$data.year = v.getFullYear();
+				},
+				handleSelectMonth: function () { // 点击日期选择器
+					if (this.$data.loadPicker) {
+						this.$refs.picker.open();
+					}
+				},
+				handleUserClickDate: function (v) { // 点击日历中的某一天
+					this.checkDateSum(v.text);
+				},
+				changeToPrevMonth: function () { // 切换到上个月
+					if (this.$data.isFetching) {
+						return false;
+					}
+					var newMonth = this.$data.month;
+					var newYear = this.$data.year;
+					if (this.$data.month === 0) {
+						newMonth = 11;
+						newYear = this.$data.year - 1;
+					} else {
+						newMonth = this.$data.month - 1;
+					}
+					if (newYear < this.$data.minReal.getFullYear()) {
+						return false;
+					} else if (newYear === this.$data.minReal.getFullYear() && newMonth < this.$data.minReal.getMonth()) {
+						return false;
+					} else {
+						this.$data.year = newYear;
+						this.$data.month = newMonth;
+					}
+				},
+				changeToNextMonth: function () { // 切换到下个月
+					if (this.$data.isFetching) {
+						return false;
+					}
+					var newMonth = this.$data.month;
+					var newYear = this.$data.year;
+					if (this.$data.month === 11) {
+						newMonth = 0;
+						newYear = this.$data.year + 1;
+					} else {
+						newMonth = this.$data.month + 1;
+					}
+					if (newYear > this.$data.maxReal.getFullYear()) {
+						return false;
+					} else if (newYear === this.$data.maxReal.getFullYear() && newMonth > this.$data.maxReal.getMonth()) {
+						return false;
+					} else {
+						this.$data.year = newYear;
+						this.$data.month = newMonth;
+					}
+				},
+				getMonthData: function () { // 获取当前月的数据
+					this.$data.loadPicker = false;
+					var API = 'json/summary.json?v=' + new Date().getTime();
+					if (!this.$data.monthsData[this.cacheDataKey]) {
+						if (this.$data.isFetching) {
+							return false;
+						}
+						this.$data.isFetching = true;
+						vueUtil.get(API, {year: this.$data.year, month: this.$data.month+1}, function (fetchData) {
+							if (fetchData) {
+								Vue.set(vm.$data.monthsData, vm.cacheDataKey, fetchData);
+								vm.pushCurMonthEventsToCal();
+							}
+							vm.$data.isFetching = false;
+							vm.$data.loadPicker = true;
+						}, function (error) {
+							vm.$data.isFetching = false;
+							vm.$data.loadPicker = true;
+							vueUtil.toast(error.message || '网络错误，请稍后重试~');
+						});
+					} else {
+						this.$data.loadPicker = true;
+						this.pushCurMonthEventsToCal();
+					}
+				}
+			},
+			created: function () {
+				var year = Util.queryUrl(window.location.href, 'year');
+				var month = Util.queryUrl(window.location.href, 'month');
+				if (year !== undefined && year >= 2014 && year <= 2100 &&
+						month !== undefined && month > 0 && month <= 12 ) {
+					this.$data.year = Math.floor(year);
+					this.$data.month = Math.floor(month-1);
+				}
+				this.getMonthData();
+				setTimeout(function () {
+					vm.$data.loaded = true;
+				}, 300);
+			}
+		});
+	});
+</script>
+</body>
+</html>
